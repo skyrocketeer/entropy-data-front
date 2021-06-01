@@ -1,33 +1,39 @@
 {
-  "name": "gatsby-site",
-  "version": "1.0.0",
+  "name": "entropy-nextjs-chakra",
+  "version": "0.1.0",
   "private": true,
-  "description": "Gatsby site",
-  "author": "jimmy",
-  "keywords": [
-    "gatsby"
-  ],
   "scripts": {
-    "develop": "gatsby develop",
-    "start": "gatsby develop",
-    "build": "gatsby build",
-    "serve": "gatsby serve",
-    "clean": "gatsby clean"
+    "dev": "next dev -p 3500",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "gatsby": "^3.2.1",
-    "gatsby-plugin-gatsby-cloud": "^2.2.0",
-    "gatsby-plugin-image": "^1.2.1",
-    "gatsby-plugin-react-helmet": "^4.2.0",
-    "gatsby-plugin-sass": "^4.2.0",
-    "gatsby-plugin-sharp": "^3.2.1",
-    "gatsby-plugin-sitemap": "^3.2.0",
-    "gatsby-source-filesystem": "^3.2.0",
-    "gatsby-transformer-remark": "^3.2.0",
-    "gatsby-transformer-sharp": "^3.2.0",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
-    "react-helmet": "^6.1.0",
-    "sass": "^1.32.8"
+    "@chakra-ui/icons": "^1.0.13",
+    "@chakra-ui/react": "^1.6.1",
+    "@emotion/react": "^11",
+    "@emotion/styled": "^11",
+    "@hookform/resolvers": "^2.5.0",
+    "axios": "^0.21.1",
+    "bingmaps": "^2.0.3",
+    "framer-motion": "^4",
+    "http-proxy": "^1.18.1",
+    "next": "10.2.0",
+    "nookies": "^2.5.2",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-hook-form": "^7.5.3",
+    "react-icons": "^4.2.0",
+    "recoil": "^0.2.0",
+    "recoil-persist": "^2.5.0",
+    "sass": "^1.32.12",
+    "yup": "^0.32.9"
+  },
+  "devDependencies": {
+    "@types/http-proxy": "^1.17.6",
+    "@types/node": "^15.0.2",
+    "@types/react": "^17.0.5",
+    "@types/yup": "^0.29.11",
+    "babel-loader": "^8.2.2",
+    "typescript": "^4.2.4"
   }
 }
