@@ -2,8 +2,9 @@ import axios from "axios";
 import type { NextPageContext } from "next";
 import { useRouter } from "next/router";
 import nookies from 'nookies'
+import { useEffect } from "react";
 import { useRecoilState } from "recoil";
-import { userData } from "~store/auth";
+import { isLoggedIn, userData } from "~store/auth";
 import { parseTokenFromUrl, isClient } from "~utils/helper";
 
 export function getServerSideProps(ctx: NextPageContext) {
@@ -20,18 +21,23 @@ export function getServerSideProps(ctx: NextPageContext) {
 }
 
 const RedirectSocialLogin = () => {
+  const router = useRouter();
   const [user, setUser] = useRecoilState(userData)
-  axios.get('/api/user/me')
+  const [isAuth, setAuth] = useRecoilState(isLoggedIn)
+
+  useEffect(() => {
+    axios.get('/api/user/me')
     .then((res) => {
       setUser(res.data)
+      setAuth(true)
       if (isClient) {
-        const router = useRouter()
         router.push('/account/profile')
       }
     })
     .catch(err => console.log(err))
-
+  }, [])
   return <span>Redirecting ...</span>
+  
 }
 
 export default RedirectSocialLogin
