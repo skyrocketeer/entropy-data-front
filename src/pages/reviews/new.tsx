@@ -29,15 +29,17 @@ import Map from '~components/Map'
 import { useState } from 'react';
 
 const schema = yup.object().shape({
-  address: yup.string().required(),
-  placeName: yup.string().required(),
+  review: yup.string().required("Vui lòng nhập nhận xét."),
+  // address: yup.string().required(),
+  placeName: yup.string().required('Vui lòng điền địa điểm.'),
   imgExternalLink: yup.string(),
   imgGalleries: yup.array().of(yup.string()),
-  category: yup.number().required(),
-  variant: yup.number().required(),
+  category: yup.number().required("Vui lòng chọn danh mục").typeError('Vui lòng chọn danh mục.'),
+  variant: yup.number().required().typeError('Vui lòng chọn danh mục.'),
 });
 
 type FormValues = {
+  review: string
   files?: FileList
   imgExternalLink?: string
   imgGalleries: () => []
@@ -58,7 +60,7 @@ export default function NewReview() {
     resolver: yupResolver(schema)
   })
 
-  const [imgGalleries, setGalleries] = useState<[{ src: string, title: string }]>([])
+  const [imgGalleries, setGalleries] = useState<any>([])
 
   const addToGallery = () => {
     if (getValues('imgExternalLink')) {
@@ -107,14 +109,23 @@ export default function NewReview() {
       <Center>
         <Box w={['100%', '100%', '80%']} py='3' px='4' borderWidth="1px" borderRadius="lg" overflow="hidden" boxShadow='lg'>
           <form>
-            <FormControl my='3'>
-              <FormLabel color='green.300' fontWeight='semibold' mb='2' > Place name </FormLabel>
+          <FormControl my='3' isRequired 
+            isInvalid={!!errors?.review?.message}
+          >
+            <FormLabel color='green.300' fontWeight='semibold' mb='2' > Lời nhận xét của bạn </FormLabel>
+            <Input id="review" type="text" placeholder='New store' {...register("review")} />
+            <FormErrorMessage>{errors?.review?.message}</FormErrorMessage>
+          </FormControl>
+            <FormControl my='3' isRequired
+              isInvalid={!!errors?.placeName?.message}
+            >
+              <FormLabel color='green.300' fontWeight='semibold' mb='2' > Tên địa điểm </FormLabel>
               <Input id="email" type="text" placeholder='New store' {...register("placeName")} />
               <FormErrorMessage>{errors?.placeName?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl id="location" my='3'>
+            <FormControl id="location" my='3' isRequired >
               <Box>
-                <FormLabel color='green.300' fontWeight='semibold' mb='2'> Location </FormLabel>
+                <FormLabel color='green.300' fontWeight='semibold' mb='2'> Vị trí </FormLabel>
               </Box>
               <InputGroup>
                 <Input type="text"
@@ -130,8 +141,10 @@ export default function NewReview() {
               </InputGroup>
               <FormErrorMessage>{errors?.address?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl id="category">
-              <FormLabel color='green.300' fontWeight='semibold' mb='2'> Category </FormLabel>
+            <FormControl id="category" isRequired
+              isInvalid={!!errors?.category?.message}
+            >
+              <FormLabel color='green.300' fontWeight='semibold' mb='2'> Danh mục </FormLabel>
               <Select placeholder="Select category" color='gray.600' {...register("category")}>
                 <option value='1'>Fashion</option>
                 <option value='2'>Utilities</option>
@@ -141,8 +154,10 @@ export default function NewReview() {
               </Select>
               <FormErrorMessage>{errors?.category?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl id="variant" my='3'>
-              <FormLabel color='green.300' fontWeight='semibold' mb='2'> Place variants </FormLabel>
+            <FormControl id="variant" my='3' isRequired 
+              isInvalid={!!errors?.variant?.message}
+            >
+              <FormLabel color='green.300' fontWeight='semibold' mb='2'> Loại hình kinh doanh </FormLabel>
               <Select placeholder="Select variants" color='gray.600' {...register("variant")}>
                 <option value='1'>Boutique</option>
                 <option value='2'>Flower shop</option>
@@ -152,7 +167,7 @@ export default function NewReview() {
             </FormControl>
             <FormControl isInvalid={!!errors.files} isRequired>
               <FormLabel color='green.300' fontWeight='semibold' mb='2'>
-                Select place photos
+                Hình ảnh
               </FormLabel>
               <HStack spacing='3'>
                 <FileUpload
@@ -196,7 +211,7 @@ export default function NewReview() {
 
               <HStack spacing={4} my='4'>
                 {imgGalleries.length ?
-                  imgGalleries.map(pic => (
+                  imgGalleries.map((pic: any) => (
                     <WrapItem
                       key={pic.title}
                       flexDir="column"
