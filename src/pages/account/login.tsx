@@ -1,26 +1,27 @@
 import {
+  Box,
+  Button,
   Center,
   FormControl,
-  FormLabel,
   FormErrorMessage,
+  FormLabel,
   Input,
-  Text,
-  Button,
-  Box,
-  Wrap, WrapItem, useColorModeValue,
+  useColorModeValue,
+  Wrap,
+  WrapItem,
 } from '@chakra-ui/react';
-import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from 'react-icons/fa';
-import * as yup from 'yup';
-import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Layout } from '~components/Layout/Private';
-import { useCallback, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { FaFacebook } from 'react-icons/fa';
+import { FcGoogle } from 'react-icons/fc';
 import { useRecoilState } from 'recoil';
+import * as yup from 'yup';
+import { Layout } from '~components/Layout';
+import { useUserProfile } from '~hooks';
 import { isLoggedIn, userData } from '~store/auth';
-import { useUserProfile } from '~hooks/useUserProfile';
 
 const schema = yup.object().shape({
   email: yup.string().email().required(),
@@ -41,14 +42,14 @@ export default function LoginForm() {
 
   const router = useRouter()
 
-  const getUser = useCallback(() => {
-    useUserProfile()
-      .then(userProfile => {
-        setUser(userProfile)
-        return Promise.resolve()
+  const getUser = (): Promise<void> => {
+    return useUserProfile()
+      .then(async (userProfile) => {
+        await setUser(userProfile);
+        return Promise.resolve();
       })
-      .catch(err => Promise.reject(err.response))
-  }, [])
+      .catch((err) => Promise.reject(err.response));
+  };
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInput>({
     mode: 'onChange',
@@ -58,18 +59,19 @@ export default function LoginForm() {
   const onSubmit = (values: LoginFormInput) => {
     setIsSubmit(true)
 
-    axios.post('/api/auth/login', values)
+    axios
+      .post('/api/auth/login', values)
       .then(async () => {
-        setAuth(true)
-        await getUser()
-        router.push('/account/profile')
+        setAuth(true);
+        await getUser();
+        router.push('/account/profile');
       })
-      .catch(err => console.log(err.response))
+      .catch((err) => console.log('error in client', err));
   }
 
   return (
     <Layout>
-      <Center w='100%' __css={{ flexDirection: 'column' }} >
+      <Center w='100%' __css={{ flexDirection: 'column' }}>
         <form style={{ width: 350 }}>
           <FormControl
             isInvalid={!!errors?.email?.message}
@@ -79,7 +81,12 @@ export default function LoginForm() {
             isRequired
           >
             <FormLabel>Email</FormLabel>
-            <Input type='email' id='email' placeholder='Email' {...register("email")} />
+            <Input
+              type='email'
+              id='email'
+              placeholder='Email'
+              {...register('email')}
+            />
             <FormErrorMessage>{errors?.email?.message}</FormErrorMessage>
           </FormControl>
           <FormControl
@@ -95,7 +102,7 @@ export default function LoginForm() {
               type='password'
               placeholder='Password'
               autoComplete={'false'}
-              {...register("password")}
+              {...register('password')}
             />
             <FormErrorMessage>{errors?.password?.message}</FormErrorMessage>
           </FormControl>
@@ -103,52 +110,49 @@ export default function LoginForm() {
             <Button
               onClick={handleSubmit(onSubmit)}
               borderRadius='lg'
-              w='80%'
+              w='320px'
               margin='auto'
               colorScheme='green'
               disabled={!!errors.email || !!errors.password || isSubmitting}
               isLoading={isSubmitting}
-              loadingText="Submitting"
+              loadingText='Submitting'
             >
               Login
-          </Button>
+            </Button>
           </Box>
         </form>
 
-        <Wrap
-          direction='column'
-          spacing="10px"
-          justify="center"
-          w='350px'
-        >
+        <Wrap direction='column' spacing='10px' justify='center' w='400px'>
           <WrapItem>
-            <Center as='a'
+            <Center
+              as='a'
               href={process.env.NEXT_PUBLIC_FACEBOOK_AUTH_URL}
-              h="40px"
+              h='40px'
               margin='auto'
               w='80%'
               borderRadius='lg'
               bg='facebook.500'
-              color="white"
+              color='white'
             >
               <FaFacebook />
-              <Box as="span" fontSize="sm" marginLeft='10px'>
+              <Box as='span' fontSize='sm' marginLeft='10px'>
                 Login with Facebook
               </Box>
             </Center>
           </WrapItem>
           <WrapItem>
-            <Center as='a'
+            <Center
+              as='a'
               href={process.env.NEXT_PUBLIC_GOOGLE_AUTH_URL}
-              h="40px"
+              h='40px'
               margin='auto'
               w='80%'
               borderRadius='lg'
               bg='gray.100'
-              color="black"
+              color='black'
             >
               <FcGoogle />
-              <Box as="span" fontSize="sm" marginLeft='10px'>
+              <Box as='span' fontSize='sm' marginLeft='10px'>
                 Login with Google
               </Box>
             </Center>

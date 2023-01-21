@@ -5,25 +5,28 @@ import {
   FormErrorMessage,
   Input,
   Button,
-} from '@chakra-ui/react';
-import * as yup from 'yup';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { Layout } from '~components/Layout/Private'
-import { useState } from 'react';
-import axios from 'axios';
-import { useRouter } from 'next/router';
+} from '@chakra-ui/react'
+import * as yup from 'yup'
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { Layout } from '~components/Layout'
+import { useState } from 'react'
+import axios from 'axios'
+import { useRouter } from 'next/router'
+import dayjs from 'dayjs'
 
 const schema = yup.object().shape({
   email: yup.string().email().required(),
   username: yup.string().max(20).required(),
   password: yup.string().min(8).required(),
+  birthDate: yup.date().typeError('Vui long nhap ngay thang nam sinh')
 });
 
 type RegisterFormInput = {
   email: string;
-  username: string;
-  password: string;
+  username: string
+  password: string
+  birthDate: Date
 };
 
 export default function RegisterForm() {
@@ -34,8 +37,15 @@ export default function RegisterForm() {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (payload: RegisterFormInput) => {
+  const onSubmit = (formData: RegisterFormInput) => {
     setIsSubmit(true)
+
+    const payload = {
+      email: formData.email,
+      password: formData.password,
+      username: formData.username,
+      birthDate: dayjs(formData.birthDate).format("YYYY-MM-DD")
+    }
 
     axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/signup`, payload)
       .then(res => {
@@ -56,9 +66,9 @@ export default function RegisterForm() {
             pb='4'
             isRequired
           >
-            <FormLabel>Name</FormLabel>
+            <FormLabel>Tên</FormLabel>
             <Input
-              id='fullName'
+              id='username'
               type='text'
               placeholder='Full Name'
               {...register("username")}
@@ -83,14 +93,30 @@ export default function RegisterForm() {
             pb='4'
             isRequired
           >
-            <FormLabel>Password</FormLabel>
+            <FormLabel>Mật khẩu</FormLabel>
             <Input
               id='password'
               type='password'
               placeholder='Password'
+              autoComplete="off"
               {...register("password")}
             />
             <FormErrorMessage>{errors?.password?.message}</FormErrorMessage>
+          </FormControl>
+          <FormControl
+            isInvalid={!!errors?.birthDate?.message}
+            errortext={errors?.birthDate?.message}
+            px='4'
+            pb='4'
+            isRequired
+          >
+            <FormLabel>Ngày sinh</FormLabel>
+            <Input
+              id='dob'
+              type='date'
+              {...register("birthDate")}
+            />
+            <FormErrorMessage>{errors?.birthDate?.message}</FormErrorMessage>
           </FormControl>
           <Button
             onClick={handleSubmit(onSubmit)}
@@ -98,11 +124,11 @@ export default function RegisterForm() {
             mx='4'
             w='90%'
             colorScheme='green'
-            disabled={!!errors.email || !!errors.password || isSubmitting}
+            disabled={!!errors.email || !!errors.password || !!errors.birthDate || isSubmitting}
             isLoading={isSubmitting}
             loadingText="Submitting"
           >
-            Login
+            Create an account
           </Button>
         </form>
       </Center>

@@ -1,26 +1,31 @@
 import { Center } from "@chakra-ui/layout"
-import { Layout } from '~components/Layout/Private'
-import { userData } from '~store/auth';
-import { useRecoilState } from "recoil";
-import { Icon, Box, Avatar, Text, HStack, VStack, Button } from '@chakra-ui/react'
-import { useEffect, useState } from "react";
-import axios from '~plugins/axios';
-import { FaBookOpen, FaGrinStars, FaStar, FaKissWinkHeart, FaSadTear, FaUserPlus } from "react-icons/fa";
+import { Layout } from '~components/Layout'
+import { userData } from '~store/auth'
+import { useRecoilValue } from "recoil"
+import { Icon, Box, Avatar, Text, HStack, VStack, Button, Skeleton } from '@chakra-ui/react'
+import { useEffect, useState } from "react"
+import { useUserProfile } from '~hooks'
+import { FaBookOpen, FaGrinStars, FaStar, FaKissWinkHeart, FaSadTear, FaUserPlus } from "react-icons/fa"
 import type { IconType } from 'react-icons'
+import withAuth from '~components/HOC/WithAuth'
+import { UserProfile } from "~types/common"
 
-export default function Profile() {
-  const [user, setUser] = useRecoilState(userData)
+function Profile(props: any) {
+  const [user, setUser] = useState<UserProfile | null>()
   const [isFollowing, setFollow] = useState(false)
   const [love, giveLove] = useState(false)
 
+  const authUser = useRecoilValue(userData)
+
   useEffect(() => {
-    if (user == null) {
-      axios.get('/api/user/me')
-        .then((res) => {
-          setUser(res.data)
-          console.log(res.data)
+    setUser(authUser)
+    if (authUser == null || !authUser) {
+      useUserProfile()
+        .then(userProfile => {
+          setUser(userProfile)
+          return
         })
-        .catch(err => console.log(err))
+        .catch(err => Promise.reject(err.response))
     }
   }, [user])
 
@@ -41,9 +46,8 @@ export default function Profile() {
     giveLove(!love)
   }
 
-  return (
-    <Layout>
-      <Center>
+  const UserProfile = () => (
+    <Center>
         <Box w={['100%', '100%', '70%', '60%']}
           borderWidth="1px" borderRadius="lg"
           overflow="hidden" boxShadow='lg'
@@ -62,9 +66,9 @@ export default function Profile() {
             <HStack color='white' spacing='4' mx='auto'>
               <Feature
                 icon={FaBookOpen}
-                desc={user?.provider} />
+              desc={user?.provider || ''} />
               <Feature icon={FaGrinStars}
-                desc={user?.role} />
+              desc={user?.role || ''} />
               <Feature icon={FaStar}
                 desc='3000 ratings' />
             </HStack>
@@ -124,6 +128,16 @@ export default function Profile() {
           </Box>
         </Box>
       </Center>
+  )
+
+
+  return (
+    <Layout>
+      <Skeleton isLoaded={user != null}>
+        <UserProfile />
+      </Skeleton>
     </Layout>
   )
 }
+
+export default withAuth(Profile)

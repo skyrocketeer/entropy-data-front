@@ -14,13 +14,16 @@ import {
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import { isLoggedIn, userData } from "~store/auth";
 
 import {
   RiMoonClearFill,
   RiSunLine,
 } from "react-icons/ri";
+import { useEffect, useState } from "react";
+import { UserProfile } from "~types/common";
+import { useLogout } from "~hooks";
 
 
 export const NavBar = () => {
@@ -31,8 +34,35 @@ export const NavBar = () => {
 
 
   // global state
-  const [isAuth, setAuth] = useRecoilState(isLoggedIn)
-  const [user, setUser] = useRecoilState(userData)
+  const [isAuth, setAuth] = useState(false)
+  const [user, setUser] = useState<UserProfile | null>(null)
+
+  /* begin
+  ** since local storage is only available in client (browser)
+  ** so need to set in here to get rid of the complaint of not matching 
+  ** HTML rendered between the server and client
+  */
+  const [isAuthStore, setAuthStore] = useRecoilState(isLoggedIn)
+  const [userStore, setUserStore] = useRecoilState(userData)
+
+  useEffect(() => {
+    setAuth(isAuthStore)
+    setUser(userStore)
+  }, [])
+  /** end */
+
+  const handleLogout = async () => {
+    setAuth(false)
+    setUser(null)
+
+    // clear app global state
+    await setAuthStore(false)
+    await setUserStore(null)
+
+    //need this to clear cookies session and local storage
+    useLogout()
+    return router.push('/account/login')
+  }
 
   // Drawer
   // const { isOpen, onOpen, onClose } = useDisclosure();
@@ -66,19 +96,20 @@ export const NavBar = () => {
   const renderIsAuth = () => (
     <>
       <Box display='flex' justifyContent="space-between" alignItems="center">
-        {user.username.length > 12 ? (
+        {user?.username && user.username.length > 12 ?
+          (
           <Text mr={4}>
-            {user.username}
+              {user?.username}
           </Text>
         ) : (
           <Text fontSize="sm" mr={2}>
-            {user.username}
+              {user?.username}
           </Text>
         )}
         <Avatar
           size="sm"
-          name={user.username}
-          src={user.imgageUrl || false}
+          name={user?.username}
+          src={user && user?.profileImgUrl != null ? user.profileImgUrl : undefined}
           mr={1}
         />
       </Box>
@@ -96,12 +127,6 @@ export const NavBar = () => {
       </Box>
     </>
   )
-
-  const handleLogout = () => {
-    setAuth(false)
-    setUser(null)
-    return router.push('/account/login')
-  }
 
   return (
     <Box

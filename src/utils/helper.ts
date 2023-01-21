@@ -6,3 +6,7 @@ export const parseTokenFromUrl = (url: string) => {
 
 const isBrowserCheck = () => typeof window !== 'undefined'
 export const isClient = isBrowserCheck()
+
+export const percentage = (x: number, y: number) => {
+  return 100 / (y / x)
+}

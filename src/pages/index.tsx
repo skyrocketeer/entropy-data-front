@@ -1,7 +1,6 @@
 import Head from 'next/head'
-import { Layout } from '../components/Layout/Private'
+import { Layout } from '../components/Layout'
 import { SimpleGrid, Box, Text, Icon, useColorModeValue } from "@chakra-ui/react"
-import { useRouter } from "next/router";
 import { BiClinic, BiAlbum, BiCloset, BiBasketball } from 'react-icons/bi'
 import { FaTools } from 'react-icons/fa'
 import { IoFlower } from 'react-icons/io5'
@@ -15,8 +14,7 @@ type CardProps = {
   linkTo: string
 }
 
-export default function Home() {
-  const router = useRouter();
+const Home = () => {
   const cardBg = useColorModeValue("white", "blackAlpha.500")
 
   const categories = [
@@ -50,3 +48,5 @@ export default function Home() {
     </>
   )
 }
+
+export default Home

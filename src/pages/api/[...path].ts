@@ -1,7 +1,8 @@
 import httpProxy from 'http-proxy'
 import type { NextApiRequest, NextApiResponse } from 'next'
-import nookies from 'nookies'
+import { setCookie, parseCookies, destroyCookie } from 'nookies'
 import type { IncomingMessage, ServerResponse } from 'http'
+import type { API_Error } from '~types/api_error'
 
 const proxy = httpProxy.createProxyServer()
 
@@ -20,15 +21,16 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
   res.on('error', (err) => {
     console.log('handle api response error', err)
   })
-  // Return a Promise to let Next.js know when we're done
-  // processing the request:
+  /* Return a Promise to let Next.js know when we're done
+  ** processing the request:
+  */
   return new Promise<void>((resolve, reject) => {
-    // In case the current API request is for logging in,
-    // we'll need to intercept the API response.
+    // we'll need these to intercept the API response.
     const isLogin = req.url === '/api/auth/login'
+    const isLogout = req.url === '/api/auth/logout'
 
     // Get the `auth-token` cookie
-    const authToken = nookies.get({ req })['auth-token']
+    const authToken = parseCookies({ req })['auth-token']
 
     // Rewrite the URL: strip out the leading '/api'.
     // For example, '/api/login' would become '/login'.
@@ -49,23 +51,42 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
     // as an HTTP-only cookie.
     proxy
       .once('proxyRes', (proxyRes: IncomingMessage, request: IncomingMessage, response: ServerResponse) => {
-        if (isLogin) {
+        // in case of logout, clear the cookies and return
+        if (isLogout) {
+          destroyCookie({ res }, 'auth-token', {
+            path: "/",
+          })
+          response.statusCode = 200
+          response.write(JSON.stringify(
+            { message: 'Logged out successfully', status: 'OK' }
+          ))
+          response.end()
+          resolve()
+          return
+        }
+        else if (isLogin) {
           // Read the API's response body from
           // the stream:
-          let apiResponseBody = ''
+          let apiResponseBody: string
           proxyRes.on('data', (chunk) => {
-            apiResponseBody += chunk
+            apiResponseBody = chunk.toString('utf8')
+            // console.log("This is the data from target server : " + apiResponseBody)
           })
 
           // Once we've read the entire API
           // response body, we're ready to
           // handle it:
           proxyRes.on('end', () => {
-            if (proxyRes.statusCode === 401) {
-              response.statusCode = 401
-              res.send({ message: response.statusMessage })
+            if (proxyRes.statusCode !== 200) {
+              const parsedAPI: API_Error = JSON.parse(apiResponseBody)
+              res.send({
+                statusCode: Number(parsedAPI.status) || 500, // set to 500 code if status is NaN
+                error: parsedAPI.error,
+                message: parsedAPI.message
+              })
               response.end()
               reject()
+              return
             }
 
             try {
@@ -75,7 +96,7 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
               // Set the authToken as an HTTP-only cookie.
               // We'll also set the SameSite attribute to
               // 'lax' for some additional CSRF protection.
-              nookies.set({ res }, 'auth-token', `${tokenType} ${accessToken}`, {
+              setCookie({ res }, 'auth-token', `${tokenType} ${accessToken}`, {
                 maxAge: 60 * 60,
                 path: '/',
                 sameSite: true,
@@ -87,13 +108,16 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
               response.statusCode = 200
               response.end()
               resolve()
+              return
             } catch (err) {
               reject(err)
+              return
             }
           })
         }
         else
           resolve()
+        return
       })
       .once('error', (err) => reject(err))
       .web(req, res, {
